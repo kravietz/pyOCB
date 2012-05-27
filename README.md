@@ -4,6 +4,8 @@ using AES block cipher.
 
 Examples:
 
+	>>> from ocb import OCB
+	>>> from ocb.aes import AES
 	>>> aes = AES(128)
 	>>> ocb = OCB(aes)
 	>>> nonce = range(16)         # AES block size
