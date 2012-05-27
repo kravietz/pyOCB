@@ -10,7 +10,6 @@
 # http://www.gnu.org/licenses/gpl.html
 
 import math
-from aes import AES
 
 class OCB:
     """
@@ -43,7 +42,7 @@ class OCB:
         # otherwise plaintext is empty
      
     """
-    def __init__(self, cipher=AES(128)):
+    def __init__(self, cipher):
         self.cipher = cipher
         self.cipherKeySize = cipher.getKeySize()
         self.cipherRounds = cipher.getRounds()
@@ -57,7 +56,7 @@ class OCB:
         """
         for i in range(len(table)):
             if table[i] > 255:
-                print "*** offender:", table[i]
+                print("*** offender:", table[i])
                 return False
         return True
 
@@ -308,7 +307,7 @@ class OCB:
     def decrypt(self, header, ciphertext, tag):
         assert self.cipherKey
         assert self.cipherBlockSize
-        assert nonce
+#        assert nonce
         assert self._onlyBytes(ciphertext)
         assert self._onlyBytes(tag)
 
@@ -370,45 +369,38 @@ class OCB:
             full_valid_tag = self._xor_block(full_valid_tag, self._pmac(header))
 
         # Compute results
-        if cmp(tag, full_valid_tag) == 0:
+        if tag == full_valid_tag:
             return (True, plaintext)
         else:
             return (False, [])
 
+def h2a(v):
+    return [ int('0x%s' % str(v[i * 2:(i + 1) * 2]), 16) for i in range(int(math.ceil(len(v) / 2.0)))]
+def a2h(a):
+    return ''.join(['%02X' % a[i] for i in range(len(a))])
 
-if __name__ == "__main__":
-    # functions to convert between array and hex string
-    def h2a(v):
-        """"
-        >>> h2a('10')
-        [16]
-        >>> h2a('0101')
-        [1, 1]
-        >>> h2a('0101ffaabbccddee')
-        [1, 1, 255, 170, 187, 204, 221, 238]
-        >>> h2a('0101ffaabbccddee0101ffaabbccddee')
-        [1, 1, 255, 170, 187, 204, 221, 238, 1, 1, 255, 170, 187, 204, 221, 238]
-        """
-        return [ int('0x%s' % str(v[i * 2:(i + 1) * 2]), 16) for i in range(int(math.ceil(len(v) / 2.0)))]
-    def a2h(a):
-        """
-        >>> a2h([1, 1, 255, 170, 187, 204, 221, 238, 1, 1, 255, 170, 187, 204, 221, 238])
-        '0101FFAABBCCDDEE0101FFAABBCCDDEE'
-        >>> a2h([1, 1, 255, 170, 187, 204, 221, 238])
-        '0101FFAABBCCDDEE'
-        >>> a2h([1, 1])
-        '0101'
-        >>> a2h([16])
-        '10'
-        """
-        return ''.join(['%02X' % a[i] for i in range(len(a))])
+import unittest
+import doctest
+from aes import AES
 
-    print("*** Built-in integrity tests...")
-    import doctest
-    doctest.testmod()
+class H2aTestCase(unittest.TestCase):
+    def setUp(self):
+        pass
+    def test_h2a(self):
+        self.assertEqual(h2a('10'), [16])
+        self.assertEqual(h2a('0101'), [1, 1])
+        self.assertEqual(h2a('0101ffaabbccddee'), [1, 1, 255, 170, 187, 204, 221, 238])
+        self.assertEqual(h2a('0101ffaabbccddee0101ffaabbccddee'), [1, 1, 255, 170, 187, 204, 221, 238, 1, 1, 255, 170, 187, 204, 221, 238])
+    def test_a2h(self):
+        self.assertEqual(a2h([1, 1, 255, 170, 187, 204, 221, 238, 1, 1, 255, 170, 187, 204, 221, 238]), '0101FFAABBCCDDEE0101FFAABBCCDDEE')
+        self.assertEqual(a2h([1, 1, 255, 170, 187, 204, 221, 238]), '0101FFAABBCCDDEE')
+        self.assertEqual(a2h([1, 1]), '0101')
+        self.assertEqual(a2h([16]), '10')
 
-    # draft-krovetz-ocb-00.txt, page 11
-    vectors = (# header, plaintext, expected tag, expectec ciphertext
+class OcbTestCase(unittest.TestCase):
+    def setUp(self):
+        # draft-krovetz-ocb-00.txt, page 11
+        self.vectors = (# header, plaintext, expected tag, expectec ciphertext
         ('', '', 'BF3108130773AD5EC70EC69E7875A7B0', ''),
         ('', '0001020304050607', 'A45F5FDEA5C088D1D7C8BE37CABC8C5C', 'C636B3A868F429BB'),
         ('', '000102030405060708090A0B0C0D0E0F', 'F7EE49AE7AA5B5E6645DB6B3966136F9', '52E48F5D19FE2D9869F0C4A4B3D2BE57'),
@@ -421,42 +413,41 @@ if __name__ == "__main__":
         ('000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F', '000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F', '41A977C91D66F62C1E1FC30BC93823CA', 'F75D6BC8B4DC8D66B836A2B08B32A636CEC3C555037571709DA25E1BB0421A27'),
         ('000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F2021222324252627', '000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F2021222324252627', '65A92715A028ACD4AE6AFF4BFAA0D396', 'F75D6BC8B4DC8D66B836A2B08B32A6369F1CD3C5228D79FD6C267F5F6AA7B231C7DFB9D59951AE9C'),
                )
-    key = h2a('000102030405060708090A0B0C0D0E0F')
-    nonce = h2a('000102030405060708090A0B0C0D0E0F')
+        self.key = h2a('000102030405060708090A0B0C0D0E0F')
+        self.nonce = h2a('000102030405060708090A0B0C0D0E0F')
 
-    aes = AES(128) # krovetz vectors are for 128 AES only
-    ocb = OCB(aes)
-    ocb.setNonce(nonce)
-    ocb.setKey(key)
+        self.aes = AES(128) # krovetz vectors are for 128 AES only
+        self.ocb = OCB(self.aes)
+        self.ocb.setNonce(self.nonce)
+        self.ocb.setKey(self.key)
 
-    print "*** Compliance with draft-krovetz-ocb-00.txt vectors..."
-    for vec in vectors:
-        (header, plaintext, expected_tag, expected_ciphertext) = vec
-        (tag, ciphertext) = ocb.encrypt(h2a(plaintext), h2a(header))
-        (dec_valid, dec_plaintext) = ocb.decrypt(h2a(header), h2a(expected_ciphertext), h2a(expected_tag))
-        print('H=', header, 'M=', plaintext)
-        print('T=', expected_tag, 'C=', expected_ciphertext, '(expected)')
-        print('T\'=', a2h(tag), 'C\'=', a2h(ciphertext), '(returned)')
-        print("Enc T==T\':", cmp(a2h(tag), expected_tag) == 0, "C==C\':", cmp(a2h(ciphertext), expected_ciphertext) == 0)
-        print("Dec Valid=", dec_valid, ", Plaintext equal=", cmp(a2h(dec_plaintext), plaintext) == 0)
+    def test_ocb(self):
+        for vec in self.vectors:
+            (header, plaintext, expected_tag, expected_ciphertext) = vec
+            (tag, ciphertext) = self.ocb.encrypt(h2a(plaintext), h2a(header))
+            (dec_valid, dec_plaintext) = self.ocb.decrypt(h2a(header), h2a(expected_ciphertext), h2a(expected_tag))
+            self.assertEqual(a2h(tag), expected_tag)
+            self.assertEqual(a2h(ciphertext), expected_ciphertext)
+            self.assertEqual(dec_valid, True)
+            self.assertEqual(a2h(dec_plaintext), plaintext)
+#            print('H=', header, 'M=', plaintext)
+#            print('T=', expected_tag, 'C=', expected_ciphertext, '(expected)')
+#            print('T\'=', a2h(tag), 'C\'=', a2h(ciphertext), '(returned)')
+#            print("Enc T==T\':", a2h(tag) == expected_tag, "C==C\':", a2h(ciphertext) == expected_ciphertext)
+#            print("Dec Valid=", dec_valid, ", Plaintext equal=", a2h(dec_plaintext) == plaintext)
 
-    import timeit
+    def test_wrong(self):
+        (header, plaintext, expected_tag, expected_ciphertext) = ('0001020304050607', '0001020304050607', '8D059589EC3B6AC00CA31624BC3AF2C6', 'C636B3A868F429BB')
+        # Tamper with tag
+        (dec_valid, dec_plaintext) = self.ocb.decrypt(h2a(header), h2a(expected_ciphertext), h2a(expected_tag.replace('0', '1')))
+        self.assertEqual(dec_valid, False)
+        # Tamper with ciphertext
+        (dec_valid, dec_plaintext) = self.ocb.decrypt(h2a(header), h2a(expected_ciphertext.replace('3', '1')), h2a(expected_tag))
+        self.assertEqual(dec_valid, False)
+        # Tamper with header
+        (dec_valid, dec_plaintext) = self.ocb.decrypt(h2a(header.replace('0', '1')), h2a(expected_ciphertext), h2a(expected_tag))
+        self.assertEqual(dec_valid, False)
 
-    j = 1000
-    vectors = (
-        ([1] * 1000, []),
-        ([], [1] * 1000),
-        ([1] * 1000, [1] * 1000),
-        )
-    for vec in vectors:
-        keylen = 128
-        header, plain = vec
-        setup = 'import aes,ocb; aes = aes.AES(%d); ocb = ocb.OCB(aes); ocb.setKey([0]*%d); ocb.setNonce([0]*%d); from __main__ import header,plain' % (keylen, keylen / 8, keylen / 8)
-        t = timeit.Timer('ocb.encrypt(header,plain)', setup)
-        time = t.timeit(j)
-        hlen = len(header) * j
-        plen = len(plain) * j
-        print(hlen, "header bytes and", plen, "plaintext bytes encrypted in", time, "seconds")
-        print("rate=", ((hlen + plen) * 8) / 1024, "kbit/sek", (hlen + plen) / 1024, "kbytes/sec")
-
-    print("*** Finished")
+if __name__ == "__main__":
+    unittest.main()
+    doctest.testmod()
