@@ -1,5 +1,7 @@
 from distutils.core import setup
-import fileinput
+
+f = open('README.md')
+desc = f.read()
 
 setup (
     name='pyocb',
@@ -9,7 +11,7 @@ setup (
     version='1.0',
     packages=['ocb', ],
     description='OCB-AES authenticated encryption for Python',
-    long_description=fileinput.input('README.md'),
+    long_description=desc,
     license="Public domain",
     classifiers=[
                  'Development Status :: 4 - Beta',
