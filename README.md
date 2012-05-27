@@ -1,6 +1,4 @@
-This module provides pure Python implementation of
-authenticated encryption mode OCB (Offset Codebook Mode)
-using AES block cipher.
+This module provides pure Python implementation of authenticated encryption mode OCB (Offset Codebook Mode) using AES block cipher.
 
 Examples:
 
@@ -23,9 +21,11 @@ code (not secret).
 	>>> print tag, ciphertext
 	[112, 241, 108, 123, 21, 7, 119, 43, 239, 210, 156, 158, 111, 17, 42, 46] [180, 107, 115, 96, 69, 33, 217, 56, 249, 65]
 	>>> (is_authentic, plaintext2) = ocb.decrypt(header, ciphertext, tag)
- 
+	 
 The flag is_authentic is True if ciphertext matches "tag" and is authentic.
 Otherwise plaintext is empty.
  
 	>>> print is_authentic, plaintext2
 	True [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+Technical details: http://en.wikipedia.org/wiki/OCB_mode
