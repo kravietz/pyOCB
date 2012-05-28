@@ -12,7 +12,7 @@ setup (
     packages=['ocb', ],
     description='OCB-AES authenticated encryption for Python',
     long_description=desc,
-    license="Public domain",
+    license="GNU General Public License v3 or later (GPLv3+)",
     classifiers=[
                  'Development Status :: 4 - Beta',
                  'Intended Audience :: Developers',
