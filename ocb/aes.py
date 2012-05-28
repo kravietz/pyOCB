@@ -420,77 +420,21 @@ class AES:
         output = self._blockUnmap(block)
         return output
 
-if __name__ == "__main__":
-    # functions to convert between array and hex string
-    def h2a(v):
+import unittest
+import doctest
+from util import a2h, h2a
+
+class AesTestCase(unittest.TestCase):
+
+    def setUp(self):
+        """ 
+        NIST AES Known Answer Test (KAT)
+        Test vectors taken from NIST Cryptographic Algorithm Validation Program (CAVP)
+            http://csrc.nist.gov/groups/STM/cavp/index.html
+        Specific test values used:
+            http://csrc.nist.gov/groups/STM/cavp/documents/aes/KAT_AES.zip
         """
-        >>> h2a('10')
-        [16]
-        >>> h2a('0101')
-        [1, 1]
-        >>> h2a('0101ffaabbccddee')
-        [1, 1, 255, 170, 187, 204, 221, 238]
-        >>> h2a('0101ffaabbccddee0101ffaabbccddee')
-        [1, 1, 255, 170, 187, 204, 221, 238, 1, 1, 255, 170, 187, 204, 221, 238]
-        """
-        return [ int('0x%s' % str(v[i * 2:(i + 1) * 2]), 16) for i in range(int(math.ceil(len(v) / 2.0)))]
-    def a2h(a):
-        """
-        >>> a2h([1, 1, 255, 170, 187, 204, 221, 238, 1, 1, 255, 170, 187, 204, 221, 238])
-        '0101ffaabbccddee0101ffaabbccddee'
-        >>> a2h([1, 1, 255, 170, 187, 204, 221, 238])
-        '0101ffaabbccddee'
-        >>> a2h([1, 1])
-        '0101'
-        >>> a2h([16])
-        '10'
-        """
-        return ''.join(['%02x' % a[i] for i in range(len(a))])
-
-    import doctest
-    doctest.testmod()
-
-    import timeit
-    plain = range(16)
-    i = int(1e4)
-
-#    standard options
-#    Timing AES...
-#    AES(128), 43.122 Kbits/sec, 5.390 Kbytes/sec
-#    AES(192), 35.104 Kbits/sec, 4.388 Kbytes/sec
-#    AES(256), 29.869 Kbits/sec, 3.734 Kbytes/sec    
-#    
-#    python -OO,  psyco.full()
-#    Timing AES...
-#    AES(128), 680.723 Kbits/sec, 85.090 Kbytes/sec
-#    AES(192), 564.993 Kbits/sec, 70.624 Kbytes/sec
-#    AES(256), 484.882 Kbits/sec, 60.610 Kbytes/sec
-    print("*** Timing AES...")
-    for keylen in (128, 192, 256):
-        setup = 'import aes; aes = aes.AES(%d); aes.setKey([0]*%d); from __main__ import plain' % (keylen, keylen / 8)
-        t = timeit.Timer('aes.encrypt(plain)', setup)
-        time = t.timeit(i)
-        bytelen = len(plain) * i
-        byterate = bytelen / time
-        #print i, "blocks encrypted in", time, "seconds"
-        #print byterate, "bytes/sec", byterate/1024, "kbytes/sec"
-        #print byterate*8, "bits/sec", byterate*8/1024, "kbits/sec"
-        print("AES(%d), %.3f Kbits/sec, %.3f Kbytes/sec" % (keylen, byterate * 8 / 1024, byterate / 1024))
-
-    """
-    Test vectors taken from NIST Cryptographic Algorithm Validation Program (CAVP)
-    
-    http://csrc.nist.gov/groups/STM/cavp/index.html
-    
-    Specific test values used:
-    
-    http://csrc.nist.gov/groups/STM/cavp/documents/aes/KAT_AES.zip
-    
-    In test output values are printed truncated for readability
-    """
-
-    print("*** NIST AES Known Answer Test (KAT) - Encryption")
-    nistE = (# key, KAT file, input, output
+        self.nistE = (# KAT ENCRYPTION - key, KAT file, input, output
             (128, 'ECBGFSbox128e.txt', 'f34481ec3cc627bacd5dc3fb08f273e6', '0336763e966d92595a567cc9ce537f5e'),
             (128, 'ECBGFSbox128e.txt', '9798c4640bad75c7c3227db910174e72', 'a9a1631bf4996954ebc093957b234589'),
             (192, 'ECBGFSbox192e.txt', '1b077a6af4b7f98229de786d7516b639', '275cfc0413d8ccb70513c3859b1d0f72'),
@@ -498,18 +442,7 @@ if __name__ == "__main__":
             (256, 'ECBGFSbox256e.txt', '014730f80ac625fe84f026c60bfd547d', '5c9d844ed46f9885085e5d6a4f94c7d7'),
             (256, 'ECBGFSbox256e.txt', '0b24af36193ce4665f2825d7b4749c98', 'a9ff75bd7cf6613d3731c77c3b6d0c04')
             )
-    print("OK   Key NIST test suite   Input    Output   Expected output")
-    for (keyLen, file, plainText, expectedCipherText) in nistE:
-        key = [0] * (keyLen / 8)
-        aes = AES(keyLen)
-        aes.setKey(key)
-        cipherText = a2h(aes.encrypt(h2a(plainText)))
-        print cmp(cipherText, expectedCipherText) == 0, keyLen, file, \
-            plainText[0:8], cipherText[0:8], expectedCipherText[0:8]
-        del aes
-
-    print("*** NIST AES Known Answer Test (KAT) - Decryption")
-    nistD = (# key, KAT file, input, output
+        self.nistD = (# KAT DECRYPTION - key, KAT file, input, output
              (128, '0336763e966d92595a567cc9ce537f5e', 'f34481ec3cc627bacd5dc3fb08f273e6'),
              (128, 'a9a1631bf4996954ebc093957b234589', '9798c4640bad75c7c3227db910174e72'),
              (192, '275cfc0413d8ccb70513c3859b1d0f72', '1b077a6af4b7f98229de786d7516b639'),
@@ -517,57 +450,49 @@ if __name__ == "__main__":
              (256, '5c9d844ed46f9885085e5d6a4f94c7d7', '014730f80ac625fe84f026c60bfd547d'),
              (256, 'a9ff75bd7cf6613d3731c77c3b6d0c04', '0b24af36193ce4665f2825d7b4749c98')
              )
-    print("OK   Key NIST test suite   Input    Output   Expected output")
-    for (keyLen, cipherText, expectedPlainText) in nistD:
-        key = [0] * (keyLen / 8)
-        aes = AES(keyLen)
-        aes.setKey(key)
-        plainText = a2h(aes.decrypt(h2a(cipherText)))
-        print(cmp(plainText, expectedPlainText) == 0, keyLen, file, \
-            cipherText[0:8], plainText[0:8], expectedPlainText[0:8])
-        del aes
+        """ http://blogs.msdn.com/si_team/archive/2006/05/19/aes-test-vectors.aspx """
+        self.msResults = (# MICROSOFT AES TEST VECTORS
+            (128, [0xbd, 0x88, 0x3f, 0x01, 0x03, 0x5e, 0x58, 0xf4, 0x2f, 0x9d, 0x81, 0x2f, 0x2d, 0xac, 0xbc, 0xd8]),
+            (192, [0x41, 0xaf, 0xb1, 0x00, 0x4c, 0x07, 0x3d, 0x92, 0xfd, 0xef, 0xa8, 0x4a, 0x4a, 0x6b, 0x26, 0xad]),
+            (256, [0xc8, 0x4b, 0x0f, 0x3a, 0x2c, 0x76, 0xdd, 0x98, 0x71, 0x90, 0x0b, 0x07, 0xf0, 0x9b, 0xdd, 0x3e])
+            )
 
-    """
-    http://blogs.msdn.com/si_team/archive/2006/05/19/aes-test-vectors.aspx
-    
-    Notation:
-            b          # bytes in a plaintext or ciphertext block
-            k          # bytes in a key
-            E(K,P)  Block cipher encryption function, K = key, P = plaintext
-            D(K,P)  Block cipher decryption function, K = key, C = ciphertext
-    Test algorithm: 
-    S = a string of k+b zero bytes.
-    repeat 1000 times:
-            n = length(S)
-            K = S[n-k..n-1]                         the last k bytes of S
-            P = S[n-k-b..n-k-1]                   the b bytes just before K
-            append E(K,E(K,P)) to S
+    def test_kat_encryption(self):
+        for (keyLen, file, plainText, expectedCipherText) in self.nistE:
+            key = [0] * (keyLen / 8)
+            aes = AES(keyLen)
+            aes.setKey(key)
+            cipherText = a2h(aes.encrypt(h2a(plainText)))
+            self.assertEqual(cipherText, expectedCipherText.upper())
+            del aes
 
-    The last b bytes of S are the test vector value.
-    """
-    print("*** Microsoft AES test vectors")
-    msResults = (
-        (128, [0xbd, 0x88, 0x3f, 0x01, 0x03, 0x5e, 0x58, 0xf4, 0x2f, 0x9d, 0x81, 0x2f, 0x2d, 0xac, 0xbc, 0xd8]),
-        (192, [0x41, 0xaf, 0xb1, 0x00, 0x4c, 0x07, 0x3d, 0x92, 0xfd, 0xef, 0xa8, 0x4a, 0x4a, 0x6b, 0x26, 0xad]),
-        (256, [0xc8, 0x4b, 0x0f, 0x3a, 0x2c, 0x76, 0xdd, 0x98, 0x71, 0x90, 0x0b, 0x07, 0xf0, 0x9b, 0xdd, 0x3e])
-        )
-    print("OK   Key Cipher output                    Expected reference output")
-    for (keyLen, result) in msResults:
-        b = 16
-        k = keyLen / 8
-        aes = AES(keyLen)
-        S = [0] * (k + b)
-        for i in range(1000):
-            n = len(S)
-            K = S[-k:]
-            #print "K=", a2h(K)
-            aes.setKey(K)
-            P = S[-(k + b):-(k)]
-            #print "P=", a2h(P)
-            S += aes.encrypt(aes.encrypt(P))
-        vector = a2h(S[-b:])
-        expectedVector = a2h(result)
-        print(cmp(vector, expectedVector) == 0, keyLen, vector, expectedVector)
+    def test_kat_decryption(self):
+        for (keyLen, cipherText, expectedPlainText) in self.nistD:
+            key = [0] * (keyLen / 8)
+            aes = AES(keyLen)
+            aes.setKey(key)
+            plainText = a2h(aes.decrypt(h2a(cipherText)))
+            self.assertEqual(plainText, expectedPlainText.upper())
+            del aes
 
-    print("*** Finished")
+    def test_ms(self):
+        for (keyLen, result) in self.msResults:
+            b = 16
+            k = keyLen / 8
+            aes = AES(keyLen)
+            S = [0] * (k + b)
+            for i in range(1000):
+                n = len(S)
+                K = S[-k:]
+                #print "K=", a2h(K)
+                aes.setKey(K)
+                P = S[-(k + b):-(k)]
+                #print "P=", a2h(P)
+                S += aes.encrypt(aes.encrypt(P))
+            vector = a2h(S[-b:])
+            expectedVector = a2h(result)
+            self.assertEqual(vector, expectedVector)
 
+if __name__ == "__main__":
+    unittest.main()
+    doctest.testmod()
