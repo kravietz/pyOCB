@@ -1,9 +1,7 @@
 This module provides pure Python implementation of authenticated encryption mode OCB (Offset Codebook Mode) using AES block cipher. OCB offers confidentiality, integrity and authenticity of data in single encryption step and using single interface. It's alternative to traditional modes (like CTR or CBC) with separate HMAC calculation.
 
-Usage
-=====
-Data
-----
+Data representation
+-------------------
 The module operates on _bytearray_ objects. Key, nonce, header and plaintext should be passed to OCB as bytearrays. 
 
 	>>> plaintext = bytearray('The Magic Words are Squeamish Ossifrage')
@@ -53,8 +51,7 @@ Encryption method over _plaintext_ and _header_ returns ciphertext and _authenti
 	>>> tag
 	bytearray(b')\xc9vx\xda\xc9Z\x80)\xfe@\xd9)\x8d\x86\x91')
 	>>> ciphertext
-	bytearray(b'3D\xdf\x01\xf3;\xe8\x87\x84@\xef\xac\xbcyK:J_3} \x9e\x889\xcd\xa4NvW
-\x88\xc1}5\x9a\x8b\xc3\x82\xd9Z')
+	bytearray(b'3D\xdf\x01\xf3;\xe8\x87\x84@\xef\xac\xbcyK:J_3} \x9e\x889\xcd\xa4NvW\x88\xc1}5\x9a\x8b\xc3\x82\xd9Z')
 
 Decryption
 ----------
