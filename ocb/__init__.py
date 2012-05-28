@@ -47,7 +47,6 @@ class OCB:
         self.cipherKeySize = cipher.getKeySize()
         self.cipherRounds = cipher.getRounds()
         self.cipherBlockSize = cipher.getBlockSize()
-        self.cipherKey = [] # XXX do we need this?
         self.nonce = []
 
     def _onlyBytes(self, table):
@@ -80,7 +79,6 @@ class OCB:
         assert len(key) == self.cipherKeySize
         assert self._onlyBytes(key)
 
-        self.cipherKey = key # XXX do we need this?
         self.cipher.setKey(key)
 
         # These routines manipulate the offsets which are used for pre- and
@@ -171,7 +169,6 @@ class OCB:
         [203, 23, 188, 81, 237, 161, 108, 134, 119, 64, 232, 75, 68, 126, 127, 187]
         """
         assert len(header)
-        assert self.cipherKey
         assert self.cipherBlockSize
 
         blocksize = self.cipherBlockSize
@@ -240,7 +237,6 @@ class OCB:
         >>> print a2h(tag)
         BF3108130773AD5EC70EC69E7875A7B0
         """
-        assert self.cipherKey
         assert self.cipherBlockSize
         assert self.nonce
         assert self._onlyBytes(plaintext)
@@ -305,9 +301,7 @@ class OCB:
 
 
     def decrypt(self, header, ciphertext, tag):
-        assert self.cipherKey
         assert self.cipherBlockSize
-#        assert nonce
         assert self._onlyBytes(ciphertext)
         assert self._onlyBytes(tag)
 
@@ -374,14 +368,10 @@ class OCB:
         else:
             return (False, [])
 
-def h2a(v):
-    return [ int('0x%s' % str(v[i * 2:(i + 1) * 2]), 16) for i in range(int(math.ceil(len(v) / 2.0)))]
-def a2h(a):
-    return ''.join(['%02X' % a[i] for i in range(len(a))])
-
 import unittest
 import doctest
 from aes import AES
+from ocb.util import a2h, h2a
 
 class H2aTestCase(unittest.TestCase):
     def setUp(self):
@@ -430,11 +420,6 @@ class OcbTestCase(unittest.TestCase):
             self.assertEqual(a2h(ciphertext), expected_ciphertext)
             self.assertEqual(dec_valid, True)
             self.assertEqual(a2h(dec_plaintext), plaintext)
-#            print('H=', header, 'M=', plaintext)
-#            print('T=', expected_tag, 'C=', expected_ciphertext, '(expected)')
-#            print('T\'=', a2h(tag), 'C\'=', a2h(ciphertext), '(returned)')
-#            print("Enc T==T\':", a2h(tag) == expected_tag, "C==C\':", a2h(ciphertext) == expected_ciphertext)
-#            print("Dec Valid=", dec_valid, ", Plaintext equal=", a2h(dec_plaintext) == plaintext)
 
     def test_wrong(self):
         (header, plaintext, expected_tag, expected_ciphertext) = ('0001020304050607', '0001020304050607', '8D059589EC3B6AC00CA31624BC3AF2C6', 'C636B3A868F429BB')
