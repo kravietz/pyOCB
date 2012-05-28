@@ -20,27 +20,23 @@ import math
 
 class AES:
     """
-    AES encryption/decryption class with support for keylength 128, 192, 256 bits.
-    Class has encrypt() and decrypt() methods which require 16 bytes array of integers
-    on input (128 bit input block) and produce same length output block. Key is set using
-    setKey() method, which takes array of integers of length 16, 24 or 32 bytes, depending
-    on keylength declared at AES object initialisation.
+    AES encryption/decryption class with support for keylength 128, 192, 256 bits. Data is represented as bytearray objects.
+    This class operates on single AES block which is 16 bytes, so plaintext for encryption and ciphertext for decryption must be exactly 16 bytes long.
     
     Usage:
     
         >>> a = AES(128)
-        >>> key = [0] * (128/8) # 16 bytes
+        >>> key = bytearray().fromhex('A45F5FDEA5C088D1D7C8BE37CABC8C5C')
         >>> a.setKey(key)
-        >>> plaintext = range(16) # don't be tempted to use range(N) with N > 255
+        >>> plaintext = bytearray('The Magic Words ')
+        >>> len(plaintext)
+        16
         >>> ciphertext = a.encrypt(plaintext)
-        >>> print ciphertext
-        [122, 202, 15, 217, 188, 214, 236, 124, 159, 151, 70, 102, 22, 230, 162, 130]
+        >>> ciphertext
+        bytearray(b'\xe6\xb7\x97\xf9\x01\x88\x1e"\xf0\xfb\xd4\xebM\xc0\x8cD')
         >>> plaintext2 = a.decrypt(ciphertext)
-        >>> print plaintext2
-        [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
-    
-    Note that this class only operates on single AES block and doesn't implement
-    any block cipher modes.
+        >>> plaintext2
+        bytearray(b'The Magic Words ')
     """
     # keysize in bits -> rounds mapping
     keySizeRounds = { 128 : 10, 192 : 12, 256 : 14 }
@@ -55,12 +51,12 @@ class AES:
         self.keyBitSize = keyBitSize
         self.nbrRounds = self.keySizeRounds[keyBitSize]
         self.expandedKeySize = (16 * (self.nbrRounds + 1))
-        self.expandedKey = []
+        self.expandedKey = bytearray()
 
     def setKey(self, key):
         """
         Set AES key with expansion. 
-        Input: array of integers. 
+        Input: bytearray. 
         Length must be 16, 24, 32 depending on keys size.
         """
         assert self.keyBitSize == len(key) * 8
@@ -180,9 +176,6 @@ class AES:
         word[0] = word[0] ^ self._getRconValue(iteration)
         return word
 
-    #
-
-    #
     def _expandKey(self, key):
         """
         Rijndael's key expansion
@@ -197,10 +190,10 @@ class AES:
         currentSize = 0
         rconIteration = 1
         # temporary 4-byte variable
-        t = [0, 0, 0, 0]
+        t = bytearray([0, 0, 0, 0])
 
         assert self.expandedKeySize
-        expandedKey = [0] * self.expandedKeySize
+        expandedKey = bytearray([0] * self.expandedKeySize)
 
         # set the 16,24,32 bytes of the expanded key to the input key
         for j in range(size):
@@ -239,7 +232,7 @@ class AES:
     # Creates a round key from the given expanded key and the
     # position within the expanded key.
     def _createRoundKey(self, expandedKey, roundKeyPointer):
-        roundKey = [0] * 16
+        roundKey = bytearray([0] * 16)
         for i in range(4):
             for j in range(4):
                 roundKey[j * 4 + i] = expandedKey[roundKeyPointer + i * 4 + j]
@@ -290,7 +283,7 @@ class AES:
 
     def _mixColumns(self, state, isInv):
         """ Galois multipication of the 4x4 matrix """
-        column = [0, 0, 0, 0]
+        column = bytearray([0, 0, 0, 0])
         # iterate over the 4 columns
         for i in range(4):
             # construct one column by iterating over the 4 rows
@@ -304,8 +297,10 @@ class AES:
 
     def _mixColumn(self, column, isInv):
         """ Galois multipication of 1 column of the 4x4 matrix """
-        if isInv: mult = [14, 9, 13, 11]
-        else: mult = [2, 1, 1, 3]
+        if isInv:
+            mult = bytearray([14, 9, 13, 11])
+        else: 
+            mult = bytearray([2, 1, 1, 3])
         cpy = list(column)
         g = self._galois_multiplication
 
@@ -374,7 +369,7 @@ class AES:
         a3,0 a3,1 a3,2 a3,3
         the mapping order is a0,0 a1,0 a2,0 a3,0 a0,1 a1,1 ... a2,3 a3,3
         """
-        block = [0] * 16
+        block = bytearray([0] * 16)
 
         for i in range(4):
             # iterate over the rows
@@ -383,27 +378,19 @@ class AES:
         return block
 
     def _blockUnmap(self, block):
-        output = [0] * 16
+        output = bytearray([0] * 16)
         for k in range(4):
             # iterate over the rows
             for l in range(4):
                 output[(k * 4) + l] = block[(k + (l * 4))]
         return output
 
-    def _onlyBytes(self, table):
-        for i in range(len(table)):
-            if table[i] > 255:
-                print("*** offender:", table[i])
-                return False
-        return True
-
     def encrypt(self, input):
         """ encrypts a 128 bit input block """
         assert len(self.expandedKey) == self.expandedKeySize
         assert len(input) == self.getBlockSize()
-        assert self._onlyBytes(input)
 
-        output = [0] * 16
+        output = bytearray([0] * 16)
         block = self._blockMap(input)
         block = self._aes_main(block, self.expandedKey, self.nbrRounds)
         output = self._blockUnmap(block)
@@ -414,15 +401,13 @@ class AES:
         assert self.expandedKey
         assert len(input) == self.getBlockSize()
 
-        output = [0] * 16
+        output = bytearray([0] * 16)
         block = self._blockMap(input)
         block = self._aes_invMain(block, self.expandedKey, self.nbrRounds)
         output = self._blockUnmap(block)
         return output
 
 import unittest
-import doctest
-from util import a2h, h2a
 
 class AesTestCase(unittest.TestCase):
 
@@ -435,12 +420,12 @@ class AesTestCase(unittest.TestCase):
             http://csrc.nist.gov/groups/STM/cavp/documents/aes/KAT_AES.zip
         """
         self.nistE = (# KAT ENCRYPTION - key, KAT file, input, output
-            (128, 'ECBGFSbox128e.txt', 'f34481ec3cc627bacd5dc3fb08f273e6', '0336763e966d92595a567cc9ce537f5e'),
-            (128, 'ECBGFSbox128e.txt', '9798c4640bad75c7c3227db910174e72', 'a9a1631bf4996954ebc093957b234589'),
-            (192, 'ECBGFSbox192e.txt', '1b077a6af4b7f98229de786d7516b639', '275cfc0413d8ccb70513c3859b1d0f72'),
-            (192, 'ECBGFSbox192e.txt', '9c2d8842e5f48f57648205d39a239af1', 'c9b8135ff1b5adc413dfd053b21bd96d'),
-            (256, 'ECBGFSbox256e.txt', '014730f80ac625fe84f026c60bfd547d', '5c9d844ed46f9885085e5d6a4f94c7d7'),
-            (256, 'ECBGFSbox256e.txt', '0b24af36193ce4665f2825d7b4749c98', 'a9ff75bd7cf6613d3731c77c3b6d0c04')
+            (128, 'f34481ec3cc627bacd5dc3fb08f273e6', '0336763e966d92595a567cc9ce537f5e'),
+            (128, '9798c4640bad75c7c3227db910174e72', 'a9a1631bf4996954ebc093957b234589'),
+            (192, '1b077a6af4b7f98229de786d7516b639', '275cfc0413d8ccb70513c3859b1d0f72'),
+            (192, '9c2d8842e5f48f57648205d39a239af1', 'c9b8135ff1b5adc413dfd053b21bd96d'),
+            (256, '014730f80ac625fe84f026c60bfd547d', '5c9d844ed46f9885085e5d6a4f94c7d7'),
+            (256, '0b24af36193ce4665f2825d7b4749c98', 'a9ff75bd7cf6613d3731c77c3b6d0c04')
             )
         self.nistD = (# KAT DECRYPTION - key, KAT file, input, output
              (128, '0336763e966d92595a567cc9ce537f5e', 'f34481ec3cc627bacd5dc3fb08f273e6'),
@@ -458,21 +443,21 @@ class AesTestCase(unittest.TestCase):
             )
 
     def test_kat_encryption(self):
-        for (keyLen, file, plainText, expectedCipherText) in self.nistE:
-            key = [0] * (keyLen / 8)
+        for (keyLen, plainText, expectedCipherText) in self.nistE:
+            key = bytearray([0] * (keyLen / 8))
             aes = AES(keyLen)
             aes.setKey(key)
-            cipherText = a2h(aes.encrypt(h2a(plainText)))
-            self.assertEqual(cipherText, expectedCipherText.upper())
+            cipherText = aes.encrypt(bytearray.fromhex((plainText)))
+            self.assertEqual(cipherText, bytearray().fromhex(expectedCipherText))
             del aes
 
     def test_kat_decryption(self):
         for (keyLen, cipherText, expectedPlainText) in self.nistD:
-            key = [0] * (keyLen / 8)
+            key = bytearray([0] * (keyLen / 8))
             aes = AES(keyLen)
             aes.setKey(key)
-            plainText = a2h(aes.decrypt(h2a(cipherText)))
-            self.assertEqual(plainText, expectedPlainText.upper())
+            plainText = aes.decrypt(bytearray.fromhex((cipherText)))
+            self.assertEqual(plainText, bytearray().fromhex(expectedPlainText))
             del aes
 
     def test_ms(self):
@@ -480,7 +465,7 @@ class AesTestCase(unittest.TestCase):
             b = 16
             k = keyLen / 8
             aes = AES(keyLen)
-            S = [0] * (k + b)
+            S = bytearray([0] * (k + b))
             for i in range(1000):
                 n = len(S)
                 K = S[-k:]
@@ -489,10 +474,9 @@ class AesTestCase(unittest.TestCase):
                 P = S[-(k + b):-(k)]
                 #print "P=", a2h(P)
                 S += aes.encrypt(aes.encrypt(P))
-            vector = a2h(S[-b:])
-            expectedVector = a2h(result)
+            vector = S[-b:]
+            expectedVector = bytearray(result)
             self.assertEqual(vector, expectedVector)
 
 if __name__ == "__main__":
     unittest.main()
-    doctest.testmod()
