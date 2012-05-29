@@ -8,7 +8,7 @@ setup (
     author='Pawel Krawczyk',
     author_email='pawel.krawczyk@hush.com',
     url='http://pypi.python.org/pypi/pyocb',
-    version='1.1',
+    version='1.2',
     packages=['ocb', ],
     description='OCB-AES authenticated encryption for Python',
     long_description=desc,
