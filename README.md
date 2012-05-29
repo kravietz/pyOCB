@@ -25,12 +25,12 @@ Initalize OCB-AES cipher objects:
 
 Parameters
 ----------
-OCB has two parameters: _key_ and _nonce_. Key will be typically 128 bit AES key: 
+OCB has two parameters: _key_ and _nonce_. Key will be typically 128, 192 or 256 bit AES key: 
 
 	>>> key = bytearray().fromhex('A45F5FDEA5C088D1D7C8BE37CABC8C5C')
 	>>> ocb.setKey(key)
 
-Nonce **must** be selected as a new value for each message encrypted. Nonce has to be the same length as key:	
+Nonce doesn't need to be random and it can be based on counter. Nonce **must** be selected as a new value for each message encrypted. Nonce has to be the same length as underlying cipher block length, typically 128 bits:
 
 	>>> nonce = bytearray(range(16))
 	>>> ocb.setNonce(nonce)
@@ -53,9 +53,11 @@ Encryption method over _plaintext_ and _header_ returns ciphertext and _authenti
 	>>> ciphertext
 	bytearray(b'3D\xdf\x01\xf3;\xe8\x87\x84@\xef\xac\xbcyK:J_3} \x9e\x889\xcd\xa4NvW\x88\xc1}5\x9a\x8b\xc3\x82\xd9Z')
 
+Encryption will reset _nonce_ status, so that it needs to be set to a new value.
+
 Decryption
 ----------
-The decrypt method takes _header_, _ciphertext_ and _tag_ on input. It returns a tuple of decrypted plaintext and flag indicating whether input data was not tampered with. 
+Decryption needs OCB object with _key_ and _nonce_ set. The decrypt method takes _header_, _ciphertext_ and _tag_ on input. It returns a tuple of decrypted plaintext and flag indicating whether input data was not tampered with. 
 	
 	>>> (is_authentic, plaintext2) = ocb.decrypt(header, ciphertext, tag)
 	>>> is_authentic
