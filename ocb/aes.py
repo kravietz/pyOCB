@@ -20,8 +20,10 @@ import math
 
 class AES:
     """
-    AES encryption/decryption class with support for keylength 128, 192, 256 bits. Data is represented as bytearray objects.
-    This class operates on single AES block which is 16 bytes, so plaintext for encryption and ciphertext for decryption must be exactly 16 bytes long.
+    AES encryption/decryption class with support for keylength 128, 192, 256 bits. 
+    Data is represented as bytearray objects. This class operates on single AES
+    block which is 16 bytes, so plaintext for encryption and ciphertext for 
+    decryption must be exactly 16 bytes long.
     
     Usage:
     
