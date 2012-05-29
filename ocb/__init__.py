@@ -14,7 +14,7 @@ import math
 class OCB:
     """
 This module provides pure Python implementation of authenticated encryption
-mode OCB (Offset Codebook Mode) using AES block cipher. OCB offers 
+mode OCB (Offset Codebook Mode, version 2) using AES block cipher. OCB offers 
 confidentiality, integrity and authenticity of data in single encryption 
 step and using single interface. It's alternative to traditional modes 
 (like CTR or CBC) with separate HMAC calculation.
@@ -108,7 +108,7 @@ The same happens if header is modified (even ciphertext was not):
 
 References
 ==========
-* [The OCB Authenticated-Encryption Algorithm](http://datatracker.ietf.org/doc/draft-krovetz-ocb/?include_text=1) (Internet draft)
+* [The OCB Authenticated-Encryption Algorithm](http://www.cs.ucdavis.edu/~rogaway/papers/draft-krovetz-ocb-00.txt)
 * [OCB Mode](http://en.wikipedia.org/wiki/OCB_mode) (Wikipedia)
     """
     def __init__(self, cipher):
