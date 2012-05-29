@@ -195,7 +195,7 @@ class AES:
         t = bytearray([0, 0, 0, 0])
 
         assert self.expandedKeySize
-        expandedKey = bytearray([0] * self.expandedKeySize)
+        expandedKey = bytearray(self.expandedKeySize)
 
         # set the 16,24,32 bytes of the expanded key to the input key
         for j in range(size):
@@ -234,7 +234,7 @@ class AES:
     # Creates a round key from the given expanded key and the
     # position within the expanded key.
     def _createRoundKey(self, expandedKey, roundKeyPointer):
-        roundKey = bytearray([0] * 16)
+        roundKey = bytearray(16)
         for i in range(4):
             for j in range(4):
                 roundKey[j * 4 + i] = expandedKey[roundKeyPointer + i * 4 + j]
@@ -371,7 +371,7 @@ class AES:
         a3,0 a3,1 a3,2 a3,3
         the mapping order is a0,0 a1,0 a2,0 a3,0 a0,1 a1,1 ... a2,3 a3,3
         """
-        block = bytearray([0] * 16)
+        block = bytearray(16)
 
         for i in range(4):
             # iterate over the rows
@@ -380,7 +380,7 @@ class AES:
         return block
 
     def _blockUnmap(self, block):
-        output = bytearray([0] * 16)
+        output = bytearray(16)
         for k in range(4):
             # iterate over the rows
             for l in range(4):
@@ -392,7 +392,7 @@ class AES:
         assert len(self.expandedKey) == self.expandedKeySize
         assert len(input) == self.getBlockSize()
 
-        output = bytearray([0] * 16)
+        output = bytearray(16)
         block = self._blockMap(input)
         block = self._aes_main(block, self.expandedKey, self.nbrRounds)
         output = self._blockUnmap(block)
@@ -403,7 +403,7 @@ class AES:
         assert self.expandedKey
         assert len(input) == self.getBlockSize()
 
-        output = bytearray([0] * 16)
+        output = bytearray(16)
         block = self._blockMap(input)
         block = self._aes_invMain(block, self.expandedKey, self.nbrRounds)
         output = self._blockUnmap(block)
@@ -446,7 +446,7 @@ class AesTestCase(unittest.TestCase):
 
     def test_kat_encryption(self):
         for (keyLen, plainText, expectedCipherText) in self.nistE:
-            key = bytearray([0] * (keyLen / 8))
+            key = bytearray((keyLen / 8))
             aes = AES(keyLen)
             aes.setKey(key)
             cipherText = aes.encrypt(bytearray.fromhex((plainText)))
@@ -455,7 +455,7 @@ class AesTestCase(unittest.TestCase):
 
     def test_kat_decryption(self):
         for (keyLen, cipherText, expectedPlainText) in self.nistD:
-            key = bytearray([0] * (keyLen / 8))
+            key = bytearray((keyLen / 8))
             aes = AES(keyLen)
             aes.setKey(key)
             plainText = aes.decrypt(bytearray.fromhex((cipherText)))
@@ -467,7 +467,7 @@ class AesTestCase(unittest.TestCase):
             b = 16
             k = keyLen / 8
             aes = AES(keyLen)
-            S = bytearray([0] * (k + b))
+            S = bytearray((k + b))
             for i in range(1000):
                 n = len(S)
                 K = S[-k:]
