@@ -1,4 +1,4 @@
-This module provides pure Python implementation of authenticated encryption mode OCB (Offset Codebook Mode, version 2) using AES block cipher. OCB offers confidentiality, integrity and authenticity of data in single encryption step and using single interface. It's alternative to traditional modes (like CTR or CBC) with separate HMAC calculation.
+This module provides pure Python implementation of authenticated encryption mode OCB (Offset Codebook Mode, version 2) using AES block cipher. OCB offers confidentiality, integrity and authenticity of data in single encryption step and using single interface. It's alternative to traditional modes (like CTR or CBC) with separate HMAC calculation. For more details see [PyOCB at IPSec.pl](http://ipsec.pl/pyocb).
 
 Data representation
 -------------------
