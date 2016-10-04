@@ -374,7 +374,7 @@ References
             return (False, [])
 
 import unittest
-from aes import AES
+from .aes import AES
 
 class OcbTestCase(unittest.TestCase):
     def setUp(self):
