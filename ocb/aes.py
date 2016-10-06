@@ -1,7 +1,7 @@
 #!/usr/bin/python
 #
 #  AES - Advanced Encryption Standard in pure Python
-# 
+#
 # Based on code by:
 #             Josh Davis ( http://www.josh-davis.org ),
 #             Laurent Haan ( http://www.progressive-coding.com )
@@ -11,7 +11,7 @@
 # Features:
 #    1) very extensive testing included
 #    2) consistent interface
-# 
+#
 # Licensed under GNU General Public License (GPL)
 # Version 3, 29 June 2007
 # http://www.gnu.org/licenses/gpl.html
@@ -20,13 +20,13 @@ import math
 
 class AES:
     """
-    AES encryption/decryption class with support for keylength 128, 192, 256 bits. 
+    AES encryption/decryption class with support for keylength 128, 192, 256 bits.
     Data is represented as bytearray objects. This class operates on single AES
-    block which is 16 bytes, so plaintext for encryption and ciphertext for 
+    block which is 16 bytes, so plaintext for encryption and ciphertext for
     decryption must be exactly 16 bytes long.
-    
+
     Usage:
-    
+
         >>> a = AES(128)
         >>> key = bytearray().fromhex('A45F5FDEA5C088D1D7C8BE37CABC8C5C')
         >>> a.setKey(key)
@@ -57,8 +57,8 @@ class AES:
 
     def setKey(self, key):
         """
-        Set AES key with expansion. 
-        Input: bytearray. 
+        Set AES key with expansion.
+        Input: bytearray.
         Length must be 16, 24, 32 depending on keys size.
         """
         assert self.keyBitSize == len(key) * 8
@@ -68,13 +68,13 @@ class AES:
         """
         Return AES key length as arrays size (bytes).
         """
-        return self.keyBitSize / 8
+        return self.keyBitSize // 8
 
     def getBlockSize(self):
         """
         Return AES block size as array size (bytes)
         """
-        return 128 / 8
+        return 128 // 8
 
     def getRounds(self):
         """
@@ -131,9 +131,9 @@ class AES:
         """
         Rijndael's key schedule rotate operation
         rotate the word eight bits to the left
-        
+
         rotate(1d2c3a4f) = 2c3a4f1d
-   
+
         word is an char array of size 4 (32 bit)
         >>> aes = AES(128)
         >>> aes._rotate('abcd')
@@ -182,11 +182,11 @@ class AES:
         """
         Rijndael's key expansion
         expands an 128,192,256 key into an 176,208,240 bytes key
- 
+
         expandedKey is a pointer to an char array of large enough size
         key is a pointer to a non-expanded key
         """
-        size = self.keyBitSize / 8
+        size = self.keyBitSize // 8
 
         # current expanded keySize, in bytes
         currentSize = 0
@@ -213,7 +213,7 @@ class AES:
                 t = self._core(t, rconIteration)
                 rconIteration += 1;
             # For 256-bit keys, we add an extra sbox to the calculation
-            if size == (256 / 8) and ((currentSize % size) == 16):
+            if size == (256 // 8) and ((currentSize % size) == 16):
                 for l in range(4): t[l] = self._getSBoxValue(t[l])
 
             #
@@ -301,7 +301,7 @@ class AES:
         """ Galois multipication of 1 column of the 4x4 matrix """
         if isInv:
             mult = bytearray([14, 9, 13, 11])
-        else: 
+        else:
             mult = bytearray([2, 1, 1, 3])
         cpy = list(column)
         g = self._galois_multiplication
@@ -414,7 +414,7 @@ import unittest
 class AesTestCase(unittest.TestCase):
 
     def setUp(self):
-        """ 
+        """
         NIST AES Known Answer Test (KAT)
         Test vectors taken from NIST Cryptographic Algorithm Validation Program (CAVP)
             http://csrc.nist.gov/groups/STM/cavp/index.html
