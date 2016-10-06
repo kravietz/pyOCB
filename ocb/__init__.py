@@ -14,9 +14,9 @@ import math
 class OCB:
     """
 This module provides pure Python implementation of authenticated encryption
-mode OCB (Offset Codebook Mode, version 2) using AES block cipher. OCB offers 
-confidentiality, integrity and authenticity of data in single encryption 
-step and using single interface. It's alternative to traditional modes 
+mode OCB (Offset Codebook Mode, version 2) using AES block cipher. OCB offers
+confidentiality, integrity and authenticity of data in single encryption
+step and using single interface. It's alternative to traditional modes
 (like CTR or CBC) with separate HMAC calculation.
 
 Usage
@@ -24,13 +24,13 @@ Usage
 Data
 ----
 The module operates on _bytearray_ objects. Key, nonce, header and plaintext
-should be passed to OCB as bytearrays. 
+should be passed to OCB as bytearrays.
 
     >>> plaintext = bytearray('The Magic Words are Squeamish Ossifrage')
     >>> header = bytearray('Recipient: john.doe@example.com')
     >>> key = bytearray().fromhex('A45F5FDEA5C088D1D7C8BE37CABC8C5C')
     >>> nonce = bytearray(range(16))
-    
+
 Loading
 -------
 Load a block cipher and OCB mode:
@@ -38,8 +38,8 @@ Load a block cipher and OCB mode:
     >>> from ocb.aes import AES
     >>> from ocb import OCB
 
-The OCB module provides built-in AES implementation, but other block 
-ciphers can be used as well. 
+The OCB module provides built-in AES implementation, but other block
+ciphers can be used as well.
 
 Initalize OCB-AES cipher objects:
 
@@ -49,24 +49,24 @@ Initalize OCB-AES cipher objects:
 Parameters
 ----------
 OCB has two parameters: _key_ and _nonce_. Key will be typically 128, 192 or 256
-bit AES key: 
+bit AES key:
 
     >>> key = bytearray().fromhex('A45F5FDEA5C088D1D7C8BE37CABC8C5C')
     >>> ocb.setKey(key)
 
-Nonce **must** be selected as a new value for each message encrypted. Nonce has 
-to be the same length as underlying cipher block length, typically 128 bits:    
+Nonce **must** be selected as a new value for each message encrypted. Nonce has
+to be the same length as underlying cipher block length, typically 128 bits:
 
     >>> nonce = bytearray(range(16))
     >>> ocb.setNonce(nonce)
-       
+
 Encryption
 ----------
 Input _plaintext_ of arbitrary length. This block will be encrypted and its
 integrity protected:
 
     >>> plaintext = bytearray('The Magic Words are Squeamish Ossifrage')
-    
+
 Optional, plaintext _header_ of arbitrary length. This block will **not**
 be encrypted, but its integrity will be protected:
 
@@ -86,8 +86,8 @@ repeating encryption.
 
 Decryption
 ----------
-The decrypt method takes _header_, _ciphertext_ and _tag_ on input. It returns a tuple of decrypted plaintext and flag indicating whether input data was not tampered with. 
-    
+The decrypt method takes _header_, _ciphertext_ and _tag_ on input. It returns a tuple of decrypted plaintext and flag indicating whether input data was not tampered with.
+
     >>> (is_authentic, plaintext2) = ocb.decrypt(header, ciphertext, tag)
     >>> is_authentic
     True
@@ -177,10 +177,10 @@ References
     def _pmac(self, header):
         """
         Calculates PMAC of optional user submitted header.
-        
+
             Input: header, array of integers of arbitrary lenght
             Output: header authentication tag, array of integers
-            
+
         """
         assert len(header)
         assert self.cipherBlockSize
@@ -236,12 +236,12 @@ References
     def encrypt(self, plaintext, header):
         """
         Encrypt a message of arbitrary length and optional header in OCB mode.
-        
+
             Input: plaintext (bytearray), header (bytearray)
             Output: (tag, ciphertext)
 
         >>> (tag,ciphertext) = ocb.encrypt(plaintext, header)
-        
+
         If key or nonce are not set an exception is raised. Encryption
         will reset nonce so that it needs to be set to a fresh value.
         """
@@ -274,7 +274,7 @@ References
             ciphertext += self._xor_block(offset, xoffset)
             assert len(ciphertext) % blocksize == 0
 
-        # Encrypt and accumulate final block        
+        # Encrypt and accumulate final block
         M_m = plaintext[((m - 1) * blocksize):]
         # Offset = times2(Offset)
         offset = self._times2(offset)
@@ -304,7 +304,7 @@ References
             tag = self._xor_block(tag, self._pmac(header))
 
         self.nonce = None
-        
+
         return (tag, ciphertext)
 
     def decrypt(self, header, ciphertext, tag):
@@ -335,7 +335,7 @@ References
             plaintext += M_i
             assert len(plaintext) % blocksize == 0
 
-            # Decrypt and accumulate final block 
+            # Decrypt and accumulate final block
 #         Offset = times2(Offset)
 #         b = bitlength(C_m)              // Value in 0..BLOCKLEN
 #         Pad = ENCIPHER(K, num2str(b, BLOCKLEN) xor Offset)
@@ -374,7 +374,7 @@ References
             return (False, [])
 
 import unittest
-from aes import AES
+from .aes import AES
 
 class OcbTestCase(unittest.TestCase):
     def setUp(self):
@@ -392,16 +392,16 @@ class OcbTestCase(unittest.TestCase):
         ('000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F', '000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F', '41A977C91D66F62C1E1FC30BC93823CA', 'F75D6BC8B4DC8D66B836A2B08B32A636CEC3C555037571709DA25E1BB0421A27'),
         ('000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F2021222324252627', '000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F2021222324252627', '65A92715A028ACD4AE6AFF4BFAA0D396', 'F75D6BC8B4DC8D66B836A2B08B32A6369F1CD3C5228D79FD6C267F5F6AA7B231C7DFB9D59951AE9C'),
                )
-        
+
         # These nonce and key are part of test vector
         self.key = bytearray().fromhex('000102030405060708090A0B0C0D0E0F')
         self.nonce = bytearray().fromhex('000102030405060708090A0B0C0D0E0F')
-        
+
     def test_pmac1_1(self):
         ocb = OCB(AES(128))
         ocb.setKey(bytearray(16))
         ocb.setNonce(bytearray(16))
-        header = bytearray(range(30))
+        header = bytearray(list(range(30)))
         expected = bytearray([170, 167, 93, 215, 89, 168, 168, 248, 222, 127, 42, 231, 123, 50, 212, 230])
         out = ocb._pmac(header)
         self.assertEqual(out, expected)
@@ -409,12 +409,12 @@ class OcbTestCase(unittest.TestCase):
     def test_pmac1_2(self):
         ocb = OCB(AES(128))
         ocb.setNonce(bytearray([32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47]))
-        ocb.setKey(bytearray(range(16)))
-        header = bytearray(range(90))
+        ocb.setKey(bytearray(list(range(16))))
+        header = bytearray(list(range(90)))
         out = ocb._pmac(header)
         expected = bytearray([203, 23, 188, 81, 237, 161, 108, 134, 119, 64, 232, 75, 68, 126, 127, 187])
         self.assertEqual(out, expected)
-        
+
     def test_xor_block(self):
         ocb = OCB(AES(128))
         i1 = bytearray([127, 128, 127, 128, 127, 128, 127, 200, 210, 220, 230, 240, 250, 251, 252, 255])
@@ -422,7 +422,7 @@ class OcbTestCase(unittest.TestCase):
         out = ocb._xor_block(i1, i2)
         expected = bytearray([255, 0, 255, 0, 255, 0, 255, 145, 165, 185, 205, 225, 245, 247, 249, 254])
         self.assertEqual(out, expected)
-    
+
     def test_times2_1(self):
         ocb = OCB(AES(128))
         i = bytearray([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15])
@@ -443,56 +443,56 @@ class OcbTestCase(unittest.TestCase):
         expected = bytearray([0, 3, 6, 5, 12, 15, 10, 9, 24, 27, 30, 29, 20, 23, 18, 17])
         out = ocb._times3(i)
         self.assertEqual(out, expected)
-        
+
     def test_times3_2(self):
         ocb = OCB(AES(128))
         i = bytearray([127, 128, 127, 128, 127, 128, 127, 200, 210, 220, 230, 240, 250, 251, 252, 255])
         expected = bytearray([128, 128, 128, 128, 128, 128, 128, 89, 119, 101, 43, 17, 15, 12, 5, 1])
         out = ocb._times3(i)
-        self.assertEqual(out, expected) 
-               
+        self.assertEqual(out, expected)
+
     def test_ocb(self):
         for key_len in (128, 192, 256):
             aes = AES(key_len)
             ocb = OCB(aes)
             ocb.setNonce(self.nonce)
-            ocb.setKey(bytearray(range(key_len/8)))
-            
+            ocb.setKey(bytearray(list(range(key_len/8))))
+
             plaintext = bytearray('The Magic Words are Squeamish Ossifrage')
             header = bytearray('Recipient: john.doe@example.com')
-            
+
             (tag, ciphertext) = ocb.encrypt(plaintext, header)
-    
+
             # decryption
             aes = AES(key_len)
             ocb = OCB(aes)
             ocb.setNonce(self.nonce)
-            ocb.setKey(bytearray(range(key_len/8)))
-            
+            ocb.setKey(bytearray(list(range(key_len/8))))
+
             (is_valid, plaintext2) = ocb.decrypt(header, ciphertext, tag)
             self.assertTrue(is_valid)
             self.assertEqual(plaintext2, plaintext)
-        
+
     def test_vectors(self):
         for vec in self.vectors:
             (header, plaintext, expected_tag, expected_ciphertext) = vec
-            
+
             # encryption
             aes = AES(128)
             ocb = OCB(aes)
             ocb.setNonce(self.nonce)
             ocb.setKey(self.key)
-            
+
             (tag, ciphertext) = ocb.encrypt(bytearray().fromhex(plaintext), bytearray().fromhex(header))
-            
+
             # decryption - use fresh objects
             aes = AES(128)
             ocb = OCB(aes)
             ocb.setNonce(self.nonce)
             ocb.setKey(self.key)
-            
+
             (dec_valid, dec_plaintext) = ocb.decrypt(bytearray().fromhex(header), ciphertext, tag)
-            
+
             # verify
             self.assertEqual(tag, bytearray().fromhex(expected_tag))
             self.assertEqual(ciphertext, bytearray().fromhex(expected_ciphertext))
@@ -502,20 +502,20 @@ class OcbTestCase(unittest.TestCase):
     def test_wrong(self):
         # Take one of the predefined ciphertext/tag pairs
         (header, plaintext, expected_tag, expected_ciphertext) = ('0001020304050607', '0001020304050607', '8D059589EC3B6AC00CA31624BC3AF2C6', 'C636B3A868F429BB')
-        
+
         aes = AES(128)
         ocb = OCB(aes)
         ocb.setNonce(self.nonce)
         ocb.setKey(self.key)
-        
+
         # Tamper with tag
         (dec_valid, dec_plaintext) = ocb.decrypt(bytearray().fromhex(header), bytearray().fromhex(expected_ciphertext), bytearray().fromhex(expected_tag.replace('0', '1')))
         self.assertFalse(dec_valid)
-        
+
         # Tamper with ciphertext
         (dec_valid, dec_plaintext) = ocb.decrypt(bytearray().fromhex(header), bytearray().fromhex(expected_ciphertext.replace('3', '1')), bytearray().fromhex(expected_tag))
         self.assertFalse(dec_valid)
-        
+
         # Tamper with header
         (dec_valid, dec_plaintext) = ocb.decrypt(bytearray().fromhex(header.replace('0', '1')), bytearray().fromhex(expected_ciphertext), bytearray().fromhex(expected_tag))
         self.assertFalse(dec_valid)
